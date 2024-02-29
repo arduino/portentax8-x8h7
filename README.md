@@ -4,6 +4,8 @@
 
 This repository contains the kernel modules for interfacing with various IO devices via a special [firmware](https://github.com/arduino/portentax8-stm32h7-fw) running on the `STM32H747AIIX`/Cortex-M7 core.
 
+This driver compiles against [linux-imx](https://github.com/nxp-imx/linux-imx):**5.10.93**.
+
 #### Build/Deploy/Install
 ```bash
 bitbake x8h7
