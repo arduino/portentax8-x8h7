@@ -1,5 +1,8 @@
-`kernel-modules/x8h7`
-=====================
+:floppy_disk: `kernel-modules/x8h7`
+===================================
+
+This repository contains the kernel modules for interfacing with various IO devices via a special [firmware](https://github.com/arduino/portentax8-stm32h7-fw) running on the `STM32H747AIIX`/Cortex-M7 core.
+
 #### Build/Deploy/Install
 ```bash
 bitbake x8h7
