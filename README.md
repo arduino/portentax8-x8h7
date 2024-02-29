@@ -1,5 +1,6 @@
-:floppy_disk: `kernel-modules/x8h7`
-===================================
+:floppy_disk: `portentax8-x8h7`
+===============================
+[![Sync Labels status](https://github.com/arduino/portentax8-x8h7/actions/workflows/sync-labels.yml/badge.svg)](https://github.com/arduino/portentax8-x8h7/actions/workflows/sync-labels.yml)
 
 This repository contains the kernel modules for interfacing with various IO devices via a special [firmware](https://github.com/arduino/portentax8-stm32h7-fw) running on the `STM32H747AIIX`/Cortex-M7 core.
 
