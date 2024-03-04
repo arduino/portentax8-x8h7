@@ -82,6 +82,38 @@ static int x8h7_pwm_pkt_get(struct x8h7_pwm_chip *pwm, unsigned int timeout)
   return 0;
 }
 
+static int x8h7_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
+{
+  struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
+
+  DBG_PRINT("\n");
+  x8h7->pkt.enable = 1;
+  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
+  x8h7_pkt_send();
+
+  return 0;
+}
+
+static void x8h7_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
+{
+  struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
+
+  DBG_PRINT("\n");
+  x8h7->pkt.enable = 0;
+  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
+  x8h7_pkt_send();
+}
+
+static int x8h7_pwm_request(struct pwm_chip *chip, struct pwm_device *pwm)
+{
+    return x8h7_pwm_enable(chip, pwm);
+}
+
+static void x8h7_pwm_free(struct pwm_chip *chip, struct pwm_device *pwm)
+{
+    x8h7_pwm_disable(chip, pwm);
+}
+
 static int x8h7_pwm_capture(struct pwm_chip *chip, struct pwm_device *pwm,
 		                        struct pwm_capture *result, unsigned long timeout)
 {
@@ -104,31 +136,31 @@ static int x8h7_pwm_capture(struct pwm_chip *chip, struct pwm_device *pwm,
   return 0;
 }
 
-static int x8h7_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
+static int x8h7_pwm_apply(struct pwm_chip *chip, struct pwm_device *pwm,
+		                        const struct pwm_state *state)
+{
+  return x8h7_pwm_config(chip, pwm, state->duty_cycle, state->period);
+}
+
+static int x8h7_pwm_get_state(struct pwm_chip *chip, struct pwm_device *pwm,
+		                        struct pwm_state *state)
 {
   struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
 
-  DBG_PRINT("\n");
-  x8h7->pkt.enable = 1;
-  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
+  state->period = x8h7->pkt.period;
+  state->polarity = x8h7->pkt.polarity;
+  state->duty_cycle = x8h7->pkt.duty;
+  state->enabled = x8h7->pkt.enable;
 
   return 0;
 }
 
-static void x8h7_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
-{
-  struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
-
-  DBG_PRINT("\n");
-  x8h7->pkt.enable = 0;
-  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
-}
-
 static const struct pwm_ops x8h7_pwm_ops = {
-  .config  = x8h7_pwm_config,
-  .enable  = x8h7_pwm_enable,
-  .disable = x8h7_pwm_disable,
+  .request = x8h7_pwm_request,
+  .free = x8h7_pwm_free,
   .capture = x8h7_pwm_capture,
+  .apply = x8h7_pwm_apply,
+  .get_state = x8h7_pwm_get_state,
   .owner   = THIS_MODULE,
 };
 
@@ -172,7 +204,9 @@ static int x8h7_pwm_remove(struct platform_device *pdev)
 {
   struct x8h7_pwm_chip *x8h7_pwm = platform_get_drvdata(pdev);
 
-  return pwmchip_remove(&x8h7_pwm->chip);
+  pwmchip_remove(&x8h7_pwm->chip);
+
+  return 0;
 }
 
 static struct platform_driver x8h7_pwm_driver = {
