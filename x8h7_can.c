@@ -6,7 +6,6 @@
 
 #include <linux/can/core.h>
 #include <linux/can/dev.h>
-#include <linux/can/led.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
@@ -125,8 +124,7 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
     net->stats.tx_packets++;
     net->stats.tx_bytes += priv->tx_len;
     priv->tx_len = 0;
-    can_led_event(net, CAN_LED_EVENT_TX);
-    can_get_echo_skb(net, 0);
+    can_get_echo_skb(net, 0, NULL);
     netif_wake_queue(net);
   }
 
@@ -177,8 +175,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
 
       priv->net->stats.rx_packets++;
       priv->net->stats.rx_bytes += frame->can_dlc;
-      can_led_event(priv->net, CAN_LED_EVENT_RX);
-      netif_rx_ni(skb);
+      netif_rx(skb);
     }
     break;
   case X8H7_CAN_OC_STS:
@@ -197,7 +194,7 @@ static void x8h7_can_clean(struct net_device *net)
   DBG_PRINT("\n");
 
   net->stats.tx_errors++;
-  can_free_echo_skb(priv->net, 0);
+  can_free_echo_skb(priv->net, 0, NULL);
 }
 
 /**
@@ -268,7 +265,7 @@ static void x8h7_can_error_skb(struct net_device *net, int can_id, int data1)
   if (skb) {
     frame->can_id |= can_id;
     frame->data[1] = data1;
-    netif_rx_ni(skb);
+    netif_rx(skb);
   } else {
     netdev_err(net, "cannot allocate error skb\n");
   }
@@ -313,8 +310,6 @@ static int x8h7_can_open(struct net_device *net)
     goto out_free_wq;
   }
 
-  can_led_event(net, CAN_LED_EVENT_OPEN);
-
   netif_wake_queue(net);
 
   return 0;
@@ -347,8 +342,6 @@ static int x8h7_can_stop(struct net_device *net)
   priv->can.state = CAN_STATE_STOPPED;
   mutex_unlock(&priv->lock);
 
-  can_led_event(net, CAN_LED_EVENT_STOP);
-
   return 0;
 }
 
@@ -370,7 +363,7 @@ static netdev_tx_t x8h7_can_start_xmit(struct sk_buff *skb,
 
   frame = (struct can_frame *)skb->data;
   x8h7_can_frame_to_tx_obj(frame, &priv->tx_frame);
-  can_put_echo_skb(skb, net, 0);
+  can_put_echo_skb(skb, net, 0, 0);
   queue_work(priv->wq, &priv->work);
 
   return NETDEV_TX_OK;
@@ -709,8 +702,6 @@ static int x8h7_can_probe(struct platform_device *pdev)
   DBG_PRINT("net device registered %s, "
             "ifindex: %d, if_port %d, dev_id: %d, dev_port %d\n",
             net->name, net->ifindex, net->if_port, net->dev_id, net ->dev_port);
-
-  devm_can_led_init(net);
 
   if (net->name[3] == '0') {
     priv->periph = X8H7_CAN1_PERIPH;
