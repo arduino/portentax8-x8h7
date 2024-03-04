@@ -377,7 +377,7 @@ static void x8h7_uart_shutdown(struct uart_port *port)
  */
 static void x8h7_uart_set_termios(struct uart_port *port,
                                   struct ktermios *termios,
-                                  struct ktermios *old)
+                                  const struct ktermios *old)
 {
   struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
   unsigned int            baud;
