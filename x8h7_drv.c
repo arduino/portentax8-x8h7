@@ -521,14 +521,14 @@ static int x8h7_probe(struct spi_device *spi)
   return status;
 }
 
-static int x8h7_remove(struct spi_device *spi)
+static void x8h7_remove(struct spi_device *spi)
 {
   struct spidev_data	*spidev = spi_get_drvdata(spi);
 
-  /* Make sure ops on existing fds can abort cleanly */
+  /* make sure ops on existing fds can abort cleanly */
   kfree(spidev);
 
-  return 0;
+  return;
 }
 
 static struct spi_driver x8h7_driver = {
