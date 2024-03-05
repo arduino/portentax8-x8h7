@@ -88,8 +88,7 @@ static int x8h7_pwm_enable(struct pwm_chip *chip, struct pwm_device *pwm)
 
   DBG_PRINT("\n");
   x8h7->pkt.enable = 1;
-  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
 
   return 0;
 }
@@ -100,8 +99,7 @@ static void x8h7_pwm_disable(struct pwm_chip *chip, struct pwm_device *pwm)
 
   DBG_PRINT("\n");
   x8h7->pkt.enable = 0;
-  x8h7_pkt_enq(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
-  x8h7_pkt_send();
+  x8h7_pkt_send_sync(X8H7_PWM_PERIPH, pwm->hwpwm, sizeof(x8h7->pkt), &x8h7->pkt);
 }
 
 static int x8h7_pwm_request(struct pwm_chip *chip, struct pwm_device *pwm)
