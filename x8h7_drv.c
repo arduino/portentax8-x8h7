@@ -58,6 +58,7 @@ struct spidev_data {
   u8                 *x8h7_txb;
   u16                 x8h7_txl;
   u8                 *x8h7_rxb;
+  u16                 fixed_length;
   struct gpio_desc   *flow_ctrl_gpio;
 };
 
@@ -461,6 +462,11 @@ static int x8h7_probe(struct spi_device *spi)
   if (!of_property_read_u32(spi->dev.of_node, "spi-max-frequency", &value))
     spidev->speed_hz = value;
   DBG_PRINT("Configuring speed_hz=%d\n", spidev->speed_hz);
+
+  /* Fixed length */
+  if (!of_property_read_u32(spi->dev.of_node, "spi-fixed-length", &value))
+    spidev->fixed_length = value;
+  DBG_PRINT("Configuring length=%d\n", spidev->fixed_length);
 
   status = 0;
 
