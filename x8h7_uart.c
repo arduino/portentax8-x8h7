@@ -352,9 +352,20 @@ static void x8h7_uart_break_ctl(struct uart_port *port, int break_state)
  */
 static int x8h7_uart_startup(struct uart_port *port)
 {
-  //struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
+  struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
+  int res = 0;
 
-  return 0;
+  DBG_PRINT("\n");
+  res = x8h7_uart_request_port(port);
+  if (res == 0) {
+    sport->port.type = PORT_X8H7_UART;
+  }
+  else {
+    sport->port.type = 150;
+    DBG_ERROR("Failed to request uart port\n");
+  }
+
+  return res;
 }
 
 /**
@@ -362,14 +373,16 @@ static int x8h7_uart_startup(struct uart_port *port)
  */
 static void x8h7_uart_shutdown(struct uart_port *port)
 {
-  //struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
+  struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
+
   DBG_PRINT("\n");
+  x8h7_uart_release_port(port);
+  sport->port.type = 150;
   /*
    * Disable all interrupts
    * Clear all interrupts
    * Free the interrupt
    */
-  //destroy_workqueue(sport->workqueue);
 }
 
 /**
