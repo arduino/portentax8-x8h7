@@ -348,6 +348,27 @@ static void x8h7_uart_break_ctl(struct uart_port *port, int break_state)
 }
 
 /**
+ *
+ */
+static int x8h7_uart_request_port(struct uart_port *port)
+{
+  struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
+
+  DBG_PRINT("\n");
+  x8h7_hook_set(X8H7_UART_PERIPH, x8h7_uart_hook, sport);
+  return 0;
+}
+
+/**
+ *
+ */
+static void x8h7_uart_release_port(struct uart_port *port)
+{
+  DBG_PRINT("\n");
+  x8h7_hook_set(X8H7_UART_PERIPH, NULL, NULL);
+}
+
+/**
  * Perform initialization and enable port for reception
  */
 static int x8h7_uart_startup(struct uart_port *port)
@@ -487,27 +508,6 @@ static const char *x8h7_uart_type(struct uart_port *port)
 
   DBG_PRINT("\n");
   return sport->port.type == PORT_X8H7_UART ? "X8H7_UART" : NULL;
-}
-
-/**
- *
- */
-static int x8h7_uart_request_port(struct uart_port *port)
-{
-  struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
-
-  DBG_PRINT("\n");
-  x8h7_hook_set(X8H7_UART_PERIPH, x8h7_uart_hook, sport);
-  return 0;
-}
-
-/**
- *
- */
-static void x8h7_uart_release_port(struct uart_port *port)
-{
-  DBG_PRINT("\n");
-  x8h7_hook_set(X8H7_UART_PERIPH, NULL, NULL);
 }
 
 /*
