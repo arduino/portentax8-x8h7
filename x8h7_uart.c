@@ -565,8 +565,6 @@ static const struct uart_ops x8h7_uart_pops = {
   .shutdown     = x8h7_uart_shutdown,
   .set_termios  = x8h7_uart_set_termios,
   .type         = x8h7_uart_type,
-  .request_port = x8h7_uart_request_port,
-  .release_port = x8h7_uart_release_port,
   .config_port  = x8h7_uart_config_port,
   .verify_port  = x8h7_uart_verify_port,
 };
