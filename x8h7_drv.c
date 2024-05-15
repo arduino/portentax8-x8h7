@@ -45,7 +45,8 @@
 #include "x8h7.h"
 
 #define DRIVER_NAME     "x8h7"
-#define X8H7_BUF_SIZE   (64*1024)
+#define X8H7_BUF_SIZE   (64)
+#define FIXED_PACKET_LEN  64
 
 //#define DEBUG
 #include "debug.h"
@@ -152,6 +153,9 @@ void pkt_dump(char *title, void *data)
     data_str[0] = 0;
     for (i=0; i<pkt->size; i++) {
       data_len += sprintf(data_str + data_len, " %02X", ptr[i]);
+    }
+    if (pkt->peripheral == 0 || pkt->size == 0) {
+      return;
     }
     printk("- PKT peripheral: %d %s, opcode: %d, size: %d data: %s\n",
            pkt->peripheral, to_peripheral_string(pkt->peripheral),
@@ -287,6 +291,9 @@ static int pkt_parse(struct spidev_data *spidev)
 
     i = pkt->peripheral;
     if (i < X8H7_PERIPH_NUM) {
+      if (pkt->peripheral == 0 || pkt->size == 0) {
+        return 0;
+      }
       if (x8h7_hook[i]) {
         x8h7_pkt_t p;
         p.peripheral = pkt->peripheral;
@@ -366,27 +373,13 @@ static int x8h7_pkt_send(void)
 
   DBG_PRINT("\n");
 
-  /* Exchange of the packet header. */
-  x8h7_spi_trx(spidev->spi,
-               spidev->x8h7_txb, spidev->x8h7_rxb, sizeof(x8h7_pkthdr_t));
-
-  hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
-  if ((hdr->size != 0) && ((hdr->size ^ 0x5555) != hdr->checksum)) {
-    DBG_ERROR("Out of sync %04X %04X\n", hdr->size, hdr->checksum);
-    return -1;
-  }
-
-  len = max(hdr->size, spidev->x8h7_txl);
-  if (len == 0) {
-    DBG_ERROR("Transaction length is zero\n");
-    return 0;
-  }
+  len = FIXED_PACKET_LEN;
 
   pkt_dump("Send", spidev->x8h7_txb);
 
   x8h7_spi_trx(spidev->spi,
-               spidev->x8h7_txb + sizeof(x8h7_pkthdr_t),
-               spidev->x8h7_rxb + sizeof(x8h7_pkthdr_t), len);
+               spidev->x8h7_txb,
+               spidev->x8h7_rxb, len);
 
   hdr = (x8h7_pkthdr_t*)spidev->x8h7_rxb;
   // @TODO: Add control
