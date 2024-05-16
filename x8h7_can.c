@@ -185,16 +185,27 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
   }
 }
 
-/**
+/*
+ * device (auto-)restart mechanism runs in a timer context =>
+ * MUST handle restart with asynchronous spi transfers (if any)
  */
-static void x8h7_can_clean(struct net_device *net)
+static int x8h7_can_restart(struct net_device *net)
 {
   struct x8h7_can_priv *priv = netdev_priv(net);
+  int err = 0;
 
   DBG_PRINT("\n");
 
-  net->stats.tx_errors++;
-  can_free_echo_skb(priv->net, 0, NULL);
+  /* @TODO: notify external hw? */
+  DBG_PRINT("@TODO: notify external hw?\n");
+
+  /* finally MUST update can state */
+	priv->can.state = CAN_STATE_ERROR_ACTIVE;
+
+  /* netdev queue can be awaken now */
+	netif_wake_queue(net);
+
+  return err;
 }
 
 /**
@@ -425,23 +436,28 @@ static int x8h7_can_hw_do_set_bittiming(struct net_device *net)
   return 0;
 }
 
-/**
+/*
+ * candev callback used to change CAN mode.
+ * Warning: this is called from a timer context!
  */
 static int x8h7_can_do_set_mode(struct net_device *net, enum can_mode mode)
 {
-  struct x8h7_can_priv *priv = netdev_priv(net);
+  int err = 0;
+
   DBG_PRINT("\n");
 
   switch (mode) {
   case CAN_MODE_START:
-    x8h7_can_clean(net);
-    priv->can.state = CAN_STATE_ERROR_ACTIVE;
+    err = x8h7_can_restart(net);
+    if (err)
+      netdev_err(net, "couldn't start device (err %d)\n",
+				   err);
     break;
   default:
     return -EOPNOTSUPP;
   }
 
-  return 0;
+  return err;
 }
 
 /**
