@@ -159,7 +159,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
       if (!skb) {
         dev_err(priv->dev, "cannot allocate RX skb\n");
         priv->net->stats.rx_dropped++;
-        return;
+        return -ENOMEM;
       }
 
       /* Copy header from raw byte-stream onto union. */
