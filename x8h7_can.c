@@ -322,7 +322,8 @@ out_clean:
   return ret;
 }
 
-/**
+/*
+ * Called by netdev to close the corresponding CAN interface.
  */
 static int x8h7_can_stop(struct net_device *net)
 {
@@ -330,10 +331,14 @@ static int x8h7_can_stop(struct net_device *net)
 
   DBG_PRINT("\n");
 
-  x8h7_can_hw_stop(priv);
-  x8h7_can_clean(net);
-
+  /* Notify upper level */
+  netif_stop_queue(net);
   close_candev(net);
+
+  /* Notify ext. hw to stop can peripheral */
+  x8h7_can_hw_stop(priv);
+
+  /* Free priv. resources */
   mutex_lock(&priv->lock);
   x8h7_hook_set(priv->periph, NULL, NULL);
   destroy_workqueue(priv->wq);
