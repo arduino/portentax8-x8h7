@@ -141,15 +141,15 @@ static void x8h7_can_status(struct x8h7_can_priv *priv, u8 intf, u8 eflag)
 
 /**
  */
-static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
+static int x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
 {
   struct x8h7_can_priv  *priv = (struct x8h7_can_priv*)arg;
 
   switch(pkt->opcode) {
   case X8H7_CAN_OC_RECV:
     if (pkt->size < X8H7_CAN_HEADER_SIZE) {
-      DBG_ERROR("received packed is too short (%d)\n", pkt->size);
-      return;
+      dev_err(priv->dev, "received packed is too short (%d)\n", pkt->size);
+      return -EINVAL;
     } else {
       struct sk_buff   *skb;
       struct can_frame *frame;
@@ -183,6 +183,7 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
     x8h7_can_status(priv, pkt->data[0], pkt->data[1]);
     break;
   }
+  return 0;
 }
 
 /*
