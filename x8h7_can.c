@@ -310,7 +310,7 @@ static int x8h7_can_open(struct net_device *net)
     goto out_free_wq;
   }
 
-  netif_wake_queue(net);
+  netif_start_queue(net);
 
   return 0;
 
