@@ -169,8 +169,12 @@ static void x8h7_can_hook(void *arg, x8h7_pkt_t *pkt)
        * same flags for signaling extended/standard id mode or remote
        * retransmit request as struct can_frame.
        */
+
       frame->can_id  = x8h7_can_msg.field.id;
       frame->can_dlc = x8h7_can_msg.field.len;
+
+      DBG_PRINT("received data %X %X, copying to %X\n", frame->can_id, frame->can_dlc, frame->data);
+
       memcpy(frame->data, pkt->data + X8H7_CAN_HEADER_SIZE, frame->can_dlc);
 
       priv->net->stats.rx_packets++;
