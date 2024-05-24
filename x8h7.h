@@ -6,7 +6,9 @@
 
 #define X8H7_RX_TIMEOUT (HZ/10)
 
-#define X8H7_PKT_SIZE   (64 - 8)
+#define X8H7_BUF_SIZE   (256)
+#define FIXED_PACKET_LEN  X8H7_BUF_SIZE
+#define X8H7_PKT_SIZE   (X8H7_BUF_SIZE - 8)
 
 typedef struct {
   uint8_t   peripheral;
