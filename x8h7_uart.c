@@ -266,7 +266,8 @@ static void x8h7_uart_mctrl_check(struct x8h7_uart_port *sport)
  */
 static void x8h7_uart_stop_rx(struct uart_port *port)
 {
-  DBG_PRINT("No operation\n");
+  struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
+  DBG_PRINT("x8h7_uart_stop_rx\n");
 }
 
 /**
@@ -278,6 +279,8 @@ static void x8h7_uart_stop_rx(struct uart_port *port)
 static unsigned int x8h7_uart_tx_empty(struct uart_port *port)
 {
   struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
+  DBG_PRINT("Tx empty : %x\n", sport->flags);
+  queue_work(sport->workqueue, &sport->work);
   return ((sport->flags & X8H7_UART_TRANSMIT) ? 0 : TIOCSER_TEMT);
 }
 
@@ -288,7 +291,7 @@ static void x8h7_uart_set_mctrl(struct uart_port *port, unsigned int mctrl)
 //struct x8h7_uart_port  *sport = (struct x8h7_uart_port *)port;
   uint16_t                control;
 
-  DBG_PRINT("\n");
+  DBG_PRINT("x8h7_uart_set_mctrl\n");
   control = 0;
 
   if (port->rs485.flags & SER_RS485_ENABLED) {
@@ -320,7 +323,7 @@ static unsigned int x8h7_uart_get_mctrl(struct uart_port *port)
  */
 static void x8h7_uart_stop_tx(struct uart_port *port)
 {
-  DBG_PRINT("No operation\n");
+  DBG_PRINT("x8h7_uart_stop_tx\n");
 }
 
 /**
@@ -330,7 +333,7 @@ static void x8h7_uart_start_tx(struct uart_port *port)
 {
   struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
 
-  DBG_PRINT("\n");
+  DBG_PRINT("x8h7_uart_start_tx\n");
   x8h7_uart_tx_chars(sport);
 }
 
@@ -342,7 +345,7 @@ static void x8h7_uart_break_ctl(struct uart_port *port, int break_state)
   struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
   unsigned long           flags;
 
-  DBG_PRINT("\n");
+  DBG_PRINT("x8h7_uart_break_ctl\n");
   spin_lock_irqsave(&sport->port.lock, flags);
   spin_unlock_irqrestore(&sport->port.lock, flags);
 }
@@ -517,7 +520,7 @@ static void x8h7_uart_config_port(struct uart_port *port, int flags)
 {
   struct x8h7_uart_port *sport = to_x8h7_uart_port(port);
 
-  DBG_PRINT("\n");
+  DBG_PRINT("x8h7_uart_config_port\n");
   if (flags & UART_CONFIG_TYPE &&
       x8h7_uart_request_port(&sport->port) == 0) {
     sport->port.type = PORT_X8H7_UART;
@@ -533,7 +536,7 @@ static int x8h7_uart_verify_port(struct uart_port *port,
   //struct x8h7_uart_port  *sport = to_x8h7_uart_port(port);
   //int                     ret = 0;
 
-  DBG_PRINT("\n");
+  DBG_PRINT("x8h7_uart_verify_port\n");
   /*
   if (ser->type != PORT_UNKNOWN && ser->type != PORT_X8H7_UART)
     ret = -EINVAL;
