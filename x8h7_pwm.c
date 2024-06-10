@@ -42,7 +42,7 @@ static int x8h7_pwm_config(struct pwm_chip *chip, struct pwm_device *pwm,
 {
   struct x8h7_pwm_chip *x8h7 = to_x8h7_pwm_chip(chip);
 
-  DBG_PRINT("duty_ns: %d, period_ns: %d\n", duty_ns, period_ns);
+  DBG_PRINT("duty_ns: %d, period_ns: %d, enabled: %d\n", duty_ns, period_ns, x8h7->pkt.enable);
   //@TODO: period_ns must be greater than 953
   x8h7->pkt.duty = duty_ns;
   x8h7->pkt.period = period_ns;
