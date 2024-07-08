@@ -68,7 +68,7 @@ struct x8h7_gpio_info {
   struct mutex lock;
   struct work_struct work;
   struct workqueue_struct *workqueue;
-  uint64_t ack_irq;
+  uint64_t offload_irq;
 };
 
 // @TODO: add remaining gpios
@@ -110,18 +110,18 @@ static const struct pinctrl_pin_desc x8h7_gpio_34_pins[] = {
 };
 
 /* We can't use x8h7_pkt_send directly in x8h7_gpio_hook since it's a deadlock */
-static void x8h7_gpio_irq_ack(struct x8h7_gpio_info *inf)
+static void x8h7_gpio_irq_offload(struct x8h7_gpio_info *inf)
 {
   if(inf->workqueue)
     queue_work(inf->workqueue, &inf->work);
 }
 
 /* Worqueue for gpio_irq_ack handling */
-static void gpio_irq_ack_work_func(struct work_struct *work)
+static void gpio_irq_work_func(struct work_struct *work)
 {
   struct x8h7_gpio_info *inf = container_of(work, struct x8h7_gpio_info, work);
   unsigned long irq = 0;
-  uint8_t hwirq = inf->ack_irq;
+  uint8_t hwirq = inf->offload_irq;
 
   irq = irq_linear_revmap(inf->irq, hwirq);
   handle_nested_irq(irq);
@@ -140,9 +140,9 @@ static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
       (pkt->size == 1)) {
     if (pkt->data[0] < X8H7_GPIO_NUM) {
       hwirq = pkt->data[0];
-      inf->ack_irq = hwirq;
-      x8h7_gpio_irq_ack(inf);
-      DBG_PRINT("call x8h7_gpio_irq_ack(%d)\n", inf->ack_irq);
+      inf->offload_irq = hwirq;
+      x8h7_gpio_irq_offload(inf);
+      DBG_PRINT("call x8h7_gpio_irq(%d)\n", inf->offload_irq);
     }
   } else {
     memcpy(&inf->rx_pkt, pkt, sizeof(x8h7_pkt_t));
@@ -569,8 +569,8 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
 
   mutex_init(&inf->lock);
 
-  INIT_WORK(&inf->work, gpio_irq_ack_work_func);
-  inf->workqueue = create_workqueue("x8h7_gpio_irq_ack_work");
+  INIT_WORK(&inf->work, gpio_irq_work_func);
+  inf->workqueue = create_workqueue("x8h7_gpio_irq_work");
   if (!inf->workqueue) {
     DBG_ERROR("Failed to create work queue\n");
     ret = -ENOMEM;
