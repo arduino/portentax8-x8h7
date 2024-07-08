@@ -120,12 +120,12 @@ static void x8h7_gpio_irq_ack(struct x8h7_gpio_info *inf)
 static void gpio_irq_ack_work_func(struct work_struct *work)
 {
   struct x8h7_gpio_info *inf = container_of(work, struct x8h7_gpio_info, work);
-  uint8_t                 data[2];
+  unsigned long irq = 0;
+  uint8_t hwirq = inf->ack_irq;
 
-  DBG_PRINT("\n");
-  data[0] = inf->ack_irq;
-  data[1] = 0x55;
-  x8h7_pkt_send_sync(X8H7_GPIO_PERIPH, X8H7_GPIO_OC_IACK, 2, data);
+  irq = irq_linear_revmap(inf->irq, hwirq);
+  handle_nested_irq(irq);
+  DBG_PRINT("call handle_nested_irq(%d)\n", hwirq);
   return;
 }
 
@@ -140,9 +140,6 @@ static void x8h7_gpio_hook(void *priv, x8h7_pkt_t *pkt)
       (pkt->size == 1)) {
     if (pkt->data[0] < X8H7_GPIO_NUM) {
       hwirq = pkt->data[0];
-      irq = irq_linear_revmap(inf->irq, hwirq);
-      handle_nested_irq(irq);
-      DBG_PRINT("call handle_nested_irq(%d)\n", hwirq);
       inf->ack_irq = hwirq;
       x8h7_gpio_irq_ack(inf);
       DBG_PRINT("call x8h7_gpio_irq_ack(%d)\n", inf->ack_irq);
