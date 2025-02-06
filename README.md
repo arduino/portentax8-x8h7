@@ -7,8 +7,30 @@ This repository contains the kernel modules for interfacing with various IO devi
 This driver compiles against [linux-imx](https://github.com/nxp-imx/linux-imx):**6.1.24**.
 
 #### Build/Deploy/Install
+* Edit `conf/auto.conf` (`vim conf/auto.conf`)
+```diff
+# Extra options that can be changed by the user
+-INHERIT += "rm_work"
+-INHERIT += "buildstats buildstats-summary"
+-INHERIT += "buildhistory"
+-BUILDHISTORY_COMMIT = "1"
+
++#INHERIT += "rm_work"
++#INHERIT += "buildstats buildstats-summary"
++#INHERIT += "buildhistory"
++#BUILDHISTORY_COMMIT = "1"
+```
+* Clean the global state and rebuild x8h7 module
 ```bash
-bitbake x8h7
+bitbake x8h7 -c do_cleansstate && bitbake x8h7
+```
+* Search for x8h7 kernel module location (`find . -maxdepth 4 -name x8h7`) within build folder (i.e. `build-lmp-base`)
+* Rebuild x8h7 kernel modules with `bitbake -c do_compile` (force the compilation or configure with the modifications you just did in WORKDIR) (and withouth `-c do_cleansstate`)
+```bash
+bitbake -c do_compile -f x8h7 && bitbake -c do_install x8h7
+```
+* Copy files to Portenta X8
+```bash
 adb push deploy/ipk/portenta_x8/x8h7_0.1-r1_portenta_x8.ipk /home/fio
 ```
 ```bash
