@@ -8,6 +8,7 @@
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
+#include <linux/gpio/driver.h>
 #include <linux/interrupt.h>
 #include <linux/pinctrl/pinconf.h>
 #include <linux/pinctrl/pinctrl.h>
@@ -610,7 +611,7 @@ static int x8h7_gpio_probe(struct platform_device *pdev)
   inf->gc.ngpio            = X8H7_GPIO_NUM;
   inf->gc.parent           = &pdev->dev;
 #ifdef CONFIG_OF_GPIO
-  inf->gc.of_node          = pdev->dev.of_node;
+  inf->gc.fwnode = dev_fwnode(&pdev->dev);
 #endif
 
   inf->irq = irq_domain_add_linear(node, X8H7_GPIO_NUM,

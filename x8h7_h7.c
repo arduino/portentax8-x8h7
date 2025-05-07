@@ -11,7 +11,7 @@
 #include <linux/list.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
-
+#include <linux/version.h> 
 #include "x8h7.h"
 #include "x8h7_ioctl.h"
 
@@ -427,7 +427,11 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   DBG_PRINT("major number of our device is %d\n", MAJOR(priv->dev_num));
 
   DBG_PRINT("Class creation\n");
-  priv->cl = class_create(THIS_MODULE, DRIVER_NAME);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
+     priv->cl = class_create(DRIVER_NAME);
+#else
+    priv->cl = class_create(THIS_MODULE, DRIVER_NAME);
+#endif
   if (priv->cl == NULL) {
     DBG_ERROR("Class creation failed\n");
     unregister_chrdev_region(priv->dev_num, 1);
