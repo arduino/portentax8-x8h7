@@ -408,6 +408,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
 
   priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
   if (!priv) {
+    printk("DAIM: return (1)\n");
     return -ENODEV;
   }
 /*
@@ -424,6 +425,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   ret = alloc_chrdev_region(&priv->dev_num, 0, 1, DRIVER_NAME);
   if (ret < 0) {
     DBG_ERROR("failed to allocate major number\n");
+    printk("DAIM: return (2)\n");
     return ret;
   }
   DBG_PRINT("major number of our device is %d\n", MAJOR(priv->dev_num));
@@ -436,6 +438,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
 #endif
   if (priv->cl == NULL) {
     DBG_ERROR("Class creation failed\n");
+    printk("DAIM: return (3)\n");
     unregister_chrdev_region(priv->dev_num, 1);
     return -1;
   }
@@ -446,6 +449,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
     DBG_ERROR("Device creation failed\n");
     class_destroy(priv->cl);
     unregister_chrdev_region(priv->dev_num, 1);
+    printk("DAIM: return (4)\n");
     return -1;
   }
 
@@ -456,6 +460,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
     device_destroy(priv->cl, priv->dev_num);
     class_destroy(priv->cl);
     unregister_chrdev_region(priv->dev_num, 1);
+    printk("DAIM: return (5)\n");
     return -1;
   }
 
@@ -469,6 +474,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
   /* Creating a sysfs entry for reading the
    * firmware version of the X8H7 firmware.
    */
+  printk("DAIM: call to kobject_create_and_add...\n");
   kobj_ref_x8h7_firmware_version = kobject_create_and_add("x8h7_firmware", kernel_kobj);
   if (!kobj_ref_x8h7_firmware_version) { // <-- ADD THIS CHECK!
     
@@ -478,6 +484,8 @@ static int x8h7_h7_probe(struct platform_device *pdev)
     return -ENOMEM; // Example: return if kobject creation fails
   }
 
+  printk("DAIM: ok!\n");
+  printk("DAIM: call to sysfs_create_files...\n");
   if (sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)) {
     printk("DAIM: X8H7-FAILED to create sysfs file.\n");
     DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
@@ -485,6 +493,7 @@ static int x8h7_h7_probe(struct platform_device *pdev)
     kobject_put(kobj_ref_x8h7_firmware_version); // Clean up the kobject
     return -EINVAL; // Example: return an error
   }
+  printk("DAIM: ok!\n");
   
   /*
   kobj_ref_x8h7_firmware_version = kobject_create_and_add("x8h7_firmware", kernel_kobj);
