@@ -404,6 +404,8 @@ static int x8h7_h7_probe(struct platform_device *pdev)
 //  struct device_node     *node = pdev->dev.of_node;
   int                     ret;
 
+  printk("DAIM: x8h7_h7 probe function\n");
+
   priv = devm_kzalloc(&pdev->dev, sizeof(*priv), GFP_KERNEL);
   if (!priv) {
     return -ENODEV;
@@ -468,15 +470,38 @@ static int x8h7_h7_probe(struct platform_device *pdev)
    * firmware version of the X8H7 firmware.
    */
   kobj_ref_x8h7_firmware_version = kobject_create_and_add("x8h7_firmware", kernel_kobj);
+  if (!kobj_ref_x8h7_firmware_version) { // <-- ADD THIS CHECK!
+    
+    printk("DAIM: X8H7-FAILED 'x8h7_firmware' kobject.\n");
+    DBG_ERROR("Failed to create 'x8h7_firmware' kobject\n");
+    // Handle error, e.g., return -ENOMEM; or whatever is appropriate for your module init
+    return -ENOMEM; // Example: return if kobject creation fails
+  }
+
+  if (sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)) {
+    printk("DAIM: X8H7-FAILED to create sysfs file.\n");
+    DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
+    // You should also clean up the kobject if file creation fails
+    kobject_put(kobj_ref_x8h7_firmware_version); // Clean up the kobject
+    return -EINVAL; // Example: return an error
+  }
+  
+  /*
+  kobj_ref_x8h7_firmware_version = kobject_create_and_add("x8h7_firmware", kernel_kobj);
   if(sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_firmware_version_attr.attr)){
     DBG_ERROR("Cannot create 'x8h7_firmware' sysfs file\n");
   }
+  */
+  
   /* Creating a sysfs entry for reading the
    * unique chip ID of the STM32H747.
    */
+  
+  /*
   if(sysfs_create_file(kobj_ref_x8h7_firmware_version, &x8h7_chip_uid_attr.attr)){
     DBG_ERROR("Cannot create 'x8h7_chip_uid' sysfs file\n");
   }
+  */
 
   return 0;
 }
