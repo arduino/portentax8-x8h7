@@ -63,7 +63,7 @@ struct spidev_data {
 
 /*-------------------------------------------------------------------------*/
 
-struct spidev_data  *x8h7_spidev;
+struct spidev_data  *x8h7_spidev = NULL;
 
 /**
  */
@@ -208,6 +208,12 @@ static int x8h7_pkt_send(void);
 int x8h7_pkt_send_sync(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
 {
   struct spidev_data *spidev = x8h7_spidev;
+  
+  /* seems this function can be called before the mutex in x8h7_spidev */
+  if(spidev == NULL) {
+    return -EPROBE_DEFER;
+  }
+
   int ret;
 
   mutex_lock(&spidev->lock);
@@ -448,7 +454,11 @@ static int x8h7_probe(struct spi_device *spi)
   /* Initialize the driver data */
   spidev->spi = spi;
   mutex_init(&spidev->lock);
-
+  /* move the initialization of x8h7_spidev ASAP so that while getting 
+     the FW version the x8h7_h7 module can successfully use an initialized 
+     mutex */
+  x8h7_spidev = spidev;
+  
   /* Device speed */
   if (!of_property_read_u32(spi->dev.of_node, "spi-max-frequency", &value))
     spidev->speed_hz = value;
@@ -508,7 +518,6 @@ static int x8h7_probe(struct spi_device *spi)
     DBG_PRINT("IRQ request irq %d OK\n", spi->irq);
   }
 
-  x8h7_spidev = spidev;
 
   if (status == 0)
     spi_set_drvdata(spi, spidev);
