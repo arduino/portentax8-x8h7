@@ -208,8 +208,8 @@ static int x8h7_pkt_send(void);
 int x8h7_pkt_send_sync(uint8_t peripheral, uint8_t opcode, uint16_t size, void *data)
 {
   struct spidev_data *spidev = x8h7_spidev;
-  
-  /* seems this function can be called before the mutex in x8h7_spidev */
+
+  /* Guard: spi access request happening before spidev data initialized */
   if(spidev == NULL) {
     return -EPROBE_DEFER;
   }
