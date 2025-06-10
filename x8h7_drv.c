@@ -489,9 +489,9 @@ static int x8h7_probe(struct spi_device *spi)
 
   /* Request optional flow control pin, in case it's a list the first */
   spidev->flow_ctrl_gpio = devm_gpiod_get_optional(&spi->dev, "flow-ctrl", GPIOD_IN);
-  if ((int)spidev->flow_ctrl_gpio < 0) {
+  if (IS_ERR(spidev->flow_ctrl_gpio)) {
     DBG_ERROR("Cannot obtain flow-ctrl-gpios property\n");
-    return (int)spidev->flow_ctrl_gpio;
+    return PTR_ERR(spidev->flow_ctrl_gpio);
   }
 
   /* Example: read flow control pin */
